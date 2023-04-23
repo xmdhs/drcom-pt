@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -18,12 +19,14 @@ var (
 	user     string
 	pass     string
 	authAddr string
+	command  string
 )
 
 func init() {
 	flag.StringVar(&user, "u", "", "")
 	flag.StringVar(&pass, "p", "", "")
 	flag.StringVar(&authAddr, "a", "", "")
+	flag.StringVar(&command, "c", "", "")
 	flag.Parse()
 }
 
@@ -44,6 +47,8 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		c := exec.CommandContext(cxt, "sh", "-c", command)
+		c.Run()
 	}
 }
 
