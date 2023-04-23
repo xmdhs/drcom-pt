@@ -77,7 +77,7 @@ func login(cxt context.Context, c *http.Client, user, pass, authAddr string) err
 	v.Set("upass", pass)
 	v.Set("0MKKey", "0123456789")
 	v.Set("ver", "1.3.5.201712141.P.W.A")
-	req, err := http.NewRequestWithContext(cxt, "POST", "http://172.17.100.100:801/eportal/?c=ACSetting&a=Login&jsVersion=3.0&login_t=2", strings.NewReader(v.Encode()))
+	req, err := http.NewRequestWithContext(cxt, "POST", authAddr, strings.NewReader(v.Encode()))
 	if err != nil {
 		return fmt.Errorf("login: %w", err)
 	}
