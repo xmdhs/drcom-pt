@@ -26,9 +26,9 @@ var (
 func init() {
 	flag.StringVar(&user, "u", "", "")
 	flag.StringVar(&pass, "p", "", "")
-	flag.StringVar(&authAddr, "a", "", "http://172.17.100.100:801/eportal/?c=ACSetting&a=Login&jsVersion=3.0&login_t=2")
+	flag.StringVar(&authAddr, "a", "http://172.17.100.100:801/eportal/?c=ACSetting&a=Login&jsVersion=3.0&login_t=2", "")
 	flag.StringVar(&command, "c", "", "")
-	flag.StringVar(&zeroMKKey, "z", "", "0123456789")
+	flag.StringVar(&zeroMKKey, "z", "0123456789", "")
 	flag.Parse()
 }
 
