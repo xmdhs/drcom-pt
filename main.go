@@ -2,14 +2,15 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"net/url"
 	"os/exec"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/avast/retry-go/v4"
@@ -35,9 +36,10 @@ func init() {
 func main() {
 	cxt := context.Background()
 	c := &http.Client{Timeout: 5 * time.Second}
+	getUrl := get204Url()
 	for {
 		err := retry.Do(func() error {
-			return checkWeb(cxt, c)
+			return checkWeb(cxt, c, getUrl())
 		}, getRetryOpts(cxt, 5)...)
 		if err == nil {
 			time.Sleep(5 * time.Second)
@@ -47,7 +49,8 @@ func main() {
 			return login(cxt, c, user, pass, zeroMKKey, authAddr)
 		}, getRetryOpts(cxt, 5)...)
 		if err != nil {
-			panic(err)
+			log.Println("登录似乎失败了")
+			time.Sleep(10 * time.Second)
 		}
 		func() {
 			cxt, cancel := context.WithTimeout(cxt, 10*time.Second)
@@ -58,8 +61,26 @@ func main() {
 	}
 }
 
-func checkWeb(cxt context.Context, c *http.Client) error {
-	req, err := http.NewRequestWithContext(cxt, "GET", "https://connect.rom.miui.com/generate_204", nil)
+func get204Url() func() string {
+	i := atomic.Uint64{}
+	urls := []string{
+		"https://connect.rom.miui.com/generate_204",
+		"https://connectivitycheck.platform.hicloud.com/generate_204",
+		"https://wifi.vivo.com.cn/generate_204",
+		"https://conn1.oppomobile.com/generate_204",
+	}
+	l := uint64(len(urls))
+	return func() string {
+		n := i.Add(1)
+		a := n % l
+		return urls[a]
+	}
+}
+
+var ErrNot204 = errors.New("不是 204")
+
+func checkWeb(cxt context.Context, c *http.Client, url string) error {
+	req, err := http.NewRequestWithContext(cxt, "GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("checkWeb: %w", err)
 	}
@@ -70,9 +91,8 @@ func checkWeb(cxt context.Context, c *http.Client) error {
 	if err != nil {
 		return fmt.Errorf("checkWeb: %w", err)
 	}
-	_, err = io.Copy(io.Discard, reps.Body)
-	if err != nil {
-		return fmt.Errorf("checkWeb: %w", err)
+	if reps.StatusCode != 204 {
+		return fmt.Errorf("checkWeb: %w", ErrNot204)
 	}
 	return nil
 }
