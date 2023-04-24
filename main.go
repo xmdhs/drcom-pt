@@ -22,14 +22,16 @@ var (
 	authAddr  string
 	command   string
 	zeroMKKey string
+	version   string
 )
 
 func init() {
-	flag.StringVar(&user, "u", "", "")
-	flag.StringVar(&pass, "p", "", "")
-	flag.StringVar(&authAddr, "a", "http://172.17.100.100:801/eportal/?c=ACSetting&a=Login&jsVersion=3.0&login_t=2", "")
-	flag.StringVar(&command, "c", "", "")
-	flag.StringVar(&zeroMKKey, "z", "0123456789", "")
+	flag.StringVar(&user, "u", "", "用户名")
+	flag.StringVar(&pass, "p", "", "密码")
+	flag.StringVar(&authAddr, "a", "http://172.17.100.100:801/eportal/?c=ACSetting&a=Login&jsVersion=3.0&login_t=2", "认证地址")
+	flag.StringVar(&command, "c", "", "登录成功后运行的命令")
+	flag.StringVar(&zeroMKKey, "z", "0123456789", "0MKKey 抓包获取")
+	flag.StringVar(&version, "v", "1.3.5.201712141.P.W.A", "ver 抓包获取")
 	flag.Parse()
 }
 
@@ -46,7 +48,7 @@ func main() {
 			continue
 		}
 		err = retry.Do(func() error {
-			return login(cxt, c, user, pass, zeroMKKey, authAddr)
+			return login(cxt, c, user, pass, zeroMKKey, version, authAddr)
 		}, getRetryOpts(cxt, 5)...)
 		if err != nil {
 			log.Println("登录似乎失败了")
@@ -97,12 +99,12 @@ func checkWeb(cxt context.Context, c *http.Client, url string) error {
 	return nil
 }
 
-func login(cxt context.Context, c *http.Client, user, pass, zeroMKKey, authAddr string) error {
+func login(cxt context.Context, c *http.Client, user, pass, zeroMKKey, version, authAddr string) error {
 	v := url.Values{}
 	v.Set("DDDDD", user)
 	v.Set("upass", pass)
 	v.Set("0MKKey", zeroMKKey)
-	v.Set("ver", "1.3.5.201712141.P.W.A")
+	v.Set("ver", version)
 	req, err := http.NewRequestWithContext(cxt, "POST", authAddr, strings.NewReader(v.Encode()))
 	if err != nil {
 		return fmt.Errorf("login: %w", err)
