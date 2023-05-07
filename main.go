@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"os/exec"
 	"strings"
 	"sync/atomic"
@@ -33,6 +34,10 @@ func init() {
 	flag.StringVar(&zeroMKKey, "z", "0123456789", "0MKKey 抓包获取")
 	flag.StringVar(&version, "v", "1.3.5.201712141.P.W.A", "ver 抓包获取")
 	flag.Parse()
+
+	if pass == "" {
+		pass = os.Getenv("pass")
+	}
 }
 
 func main() {
