@@ -42,11 +42,16 @@ func init() {
 
 func main() {
 	cxt := context.Background()
-	c := &http.Client{Timeout: 5 * time.Second}
+	c := newClient(5 * time.Second)
 	getUrl := get204Url()
 	for {
 		err := retry.Do(func() error {
-			return checkWeb(cxt, c, getUrl())
+			err := checkWeb(cxt, c, getUrl())
+			if err != nil {
+				c.CloseIdleConnections()
+				return err
+			}
+			return nil
 		}, getRetryOpts(cxt, 5)...)
 		if err == nil {
 			time.Sleep(5 * time.Second)
@@ -57,6 +62,7 @@ func main() {
 		}, getRetryOpts(cxt, 5)...)
 		if err != nil {
 			log.Println("登录似乎失败了")
+			c.CloseIdleConnections()
 			time.Sleep(10 * time.Second)
 		}
 		func() {
@@ -139,5 +145,13 @@ func getRetryOpts(cxt context.Context, attempts uint) []retry.Option {
 		retry.OnRetry(func(n uint, err error) {
 			log.Printf("retry %d: %v", n, err)
 		}),
+	}
+}
+
+func newClient(timeout time.Duration) *http.Client {
+	tr := http.DefaultTransport.(*http.Transport).Clone()
+	return &http.Client{
+		Timeout:   timeout,
+		Transport: tr,
 	}
 }
