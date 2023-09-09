@@ -64,6 +64,7 @@ func main() {
 			log.Println("登录似乎失败了")
 			c.CloseIdleConnections()
 			time.Sleep(10 * time.Second)
+			continue
 		}
 		func() {
 			cxt, cancel := context.WithTimeout(cxt, 10*time.Second)
