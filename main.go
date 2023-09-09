@@ -66,6 +66,9 @@ func main() {
 			time.Sleep(10 * time.Second)
 			continue
 		}
+		if command == "" {
+			continue
+		}
 		func() {
 			cxt, cancel := context.WithTimeout(cxt, 10*time.Second)
 			defer cancel()
